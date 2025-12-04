@@ -1,0 +1,5 @@
+app: dhango-app
+db:postgresql
+celery_worker: celery
+redis: broker
+flowe: monitor the worker or work
