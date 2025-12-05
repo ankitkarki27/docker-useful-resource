@@ -3,6 +3,8 @@ services:
     build:
       context: .
       dockerfile: dockerfiles/app/Dockerfile
+    env_file:
+      - .env
     ports:
       - 8004:8004
     networks:
@@ -21,6 +23,8 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - pg-data:/var/lib/postgresql/data  
+    networks:
+      - app-network
   # redis:
   # celery:
   # flower:

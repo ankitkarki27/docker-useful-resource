@@ -1,5 +1,6 @@
 env/
 ven/
 .env
+
 db.sqlite3
 demo.txt
