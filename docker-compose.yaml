@@ -11,8 +11,21 @@ services:
       - app-network
     depends_on:
       - db
+      - redis
     volumes:
-      - .:/app
+      - .:/app # (host) => (docker)
+    develop:
+      watch:
+        # - action: sync
+        #   path: .
+        #   target: /app
+        #   ignore:
+        #     - __pycache__/
+        #     - env/
+        - action: rebuild
+          path: requirements.txt
+
+# db (PostgreSQL)
   db:
     image: postgres:17-alpine
     ports: 
@@ -25,10 +38,47 @@ services:
       - pg-data:/var/lib/postgresql/data  
     networks:
       - app-network
-  # redis:
-  # celery:
-  # flower:
+
+  # the below is redis part
+  redis:
+    image: redis:7-alpine
+    command: redis-server --save 60 1 --loglevel warning --requirepass ${REDIS_PASSWORD}
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD} 
+    ports: 
+      - 6379:6379
+    volumes:
+      - redis:/data
+    networks:
+      - app-network
+
+  celery:
+    build:
+      context: .
+      dockerfile: dockerfiles/celery/Dockerfile
+    environment:
+      DJANGO_SETTINGS_MODULE: core.settings
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    networks:
+      - app-network
+    depends_on:
+      - redis
+    env_file:
+      - .env
+
+  flower:
+    build: 
+      context: .
+      dockerfile: dockerfiles/flower/Dockerfile
+    environment:
+      DJANGO_SETTINGS_MODULE: core.settings
+    ports:
+      - 5555:5555
+    networks:
+      - app-network
+
 networks:
   app-network:
 volumes:
   pg-data:
+  redis:
